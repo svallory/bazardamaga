@@ -1,0 +1,23 @@
+{
+  "name": "Bazar da Magá",
+  "version": "0.0.1",
+  "authors": [
+    "Saulo Vallory <me@saulovallory.com>"
+  ],
+  "main": "index.html",
+  "license": "MIT",
+  "homepage": "bazardamaga.github.io",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "~2.1.1",
+    "bootstrap": "~3.2.0"
+  }
+}

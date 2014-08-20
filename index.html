@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>
+    Bazar da Magá
+  </title>
+  <meta charset="utf-8">
+  <script type="text/javascript" src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
+
+  <!-- Latest compiled and minified CSS -->
+  <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+
+  <!-- Optional theme -->
+  <!-- link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css" -->
+
+  <link rel="stylesheet" href="http://bootswatch.com/lumen/bootstrap.min.css" />
+
+  <!-- Latest compiled and minified JavaScript -->
+  <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+
+  <style>
+    body {
+      padding-top: 100px;
+    }
+    ol {
+      list-style: none;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container-fluid">
+      <!-- Brand and toggle get grouped for better mobile display -->
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="#">Bazar da Magá</a>
+      </div>
+
+      <!-- Collect the nav links, forms, and other content for toggling -->
+      <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+        <ul class="nav navbar-nav">
+          <li class="all active"><a href="#all" class="item-toggler">Todos</a></li>
+          <li class="selling"><a href="#selling" class="item-toggler">À venda</a></li>
+          <li class="maybe"><a href="#maybe" class="item-toggler">Talvez</a></li>
+        </ul>
+        <form class="navbar-form navbar-right" role="search">
+          <div class="form-group">
+            <input id="filter" type="text" class="form-control" placeholder="Buscar">
+          </div>
+          <button type="submit" class="btn btn-default">Enviar</button>
+        </form>
+      </div><!-- /.navbar-collapse -->
+    </div><!-- /.container-fluid -->
+  </nav>
+  <div class="container">
+    <h2>FACE</h2>
+    <ol>
+      <li class="item item-unchecked">Mineral Veil Primer [Hourglass]
+      </li>
+      <li class="item item-unchecked">Primer Porefessional [Benefit]
+      </li>
+      <li class="item item-checked">FoundationPrimer [Laura Mercier]
+      </li>
+      <li class="item item-unchecked">Teint Miracle, cor 010 [Lancôme]
+      </li>
+      <li class="item item-unchecked">Vitalumière Aqua, 10 beige-pastel [CHANEL]
+      </li>
+      <li class="item item-checked">Skin Foundation, beige 3 [Bobbi Brown]
+      </li>
+      <li class="item item-unchecked">Hello Flawless, Champagne [Benefit]
+      </li>
+      <li class="item item-checked">Face and Body Foundation, N1 [M.A.C.]
+      </li>
+      <li class="item item-checked">Oil-Control Makeup Setting Spray, De Slick [Urban Decay]
+      </li>
+      <li class="item item-checked">Colorstay Whipped, 200 sand beige [Revlon]
+      </li>
+      <li class="item item-checked">Powder, Prep+Prime [M.A.C.]
+      </li>
+      <li class="item item-checked">BB Cream, Clara [L'Oreal]
+      </li>
+      <li class="item item-unchecked">Pure Make Up Foundation, 20 Beige Claro [Maybelline]
+      </li>
+      <li class="item item-checked">Duo Base, Bege Claro [O Boticário]
+      </li>
+      <li class="item item-checked">Studio Fix Powder, N5 [M.A.C.]
+      </li>
+      <li class="item item-unchecked">Studio Fix Powder, NC15 [M.A.C.]
+      </li>
+      <li class="item item-checked">Blot Powder Pressed, Medium [M.A.C.]
+      </li>
+      <li class="item item-checked">Concealer, 01 [Laura Mercier]
+      </li>
+      <li class="item item-unchecked">Concealer Dermacolor, D4 [Kryolan]
+      </li>
+      <li class="item item-unchecked">Concealer Dermacolor, D52 [Kryolan]
+      </li>
+      <li class="item item-unchecked">Corrector, Light to medium bisque [Bobbi Brown]
+      </li>
+      <li class="item item-unchecked">Concealer + Powder Set, Warm beige/Pale yellow [Bobbi Brown]
+      </li>
+      <li class="item item-checked">Concealer Studio Finish, NW20 [M.A.C.]
+      </li>
+      <li class="item item-checked">Concealer Studio Sculpt, NW20 [M.A.C.]
+      </li>
+      <li class="item item-unchecked">Concealer Pro Longwear, NW20 [M.A.C.]
+      </li>
+      <li class="item item-unchecked">Concealer Mineraiize, NW20 [M.A.C.]
+      </li>
+      <li class="item item-checked">Concealer Duo Boing 01 and 02 [Benefit]
+      </li>
+      <li class="item item-checked">Concealer Duo Boing 02 and Lemonaid [Benefit]
+      </li>
+      <li class="item item-checked">Concealer Instant Age Rewind Dark Spots Treatment, Fair :/, era pra ser fair/light [Maybelline]
+      </li>
+      <li class="item item-unchecked">Orgasm [NARS]
+      </li>
+      <li class="item item-checked">Bella Bamba [Benefit]
+      </li>
+      <li class="item item-unchecked">Highlighter What's up? [Benefit]
+      </li>
+      <li class="item item-unchecked">Bronzer, Hoola [Benefit]
+      </li>
+      <li class="item item-checked">O-glow Intuitive Cheek Color [Smashbox]
+      </li>
+      <li class="item item-unchecked">Cream Blush, Posay [M.A.C.]
+      </li>
+      <li class="item item-unchecked">Powder Blush Marilyn Monroe, Perfect Cheek [M.A.C.]
+      </li>
+      <li class="item item-checked">Powder Blush, Taupe [NYX]
+      </li>
+    </ol>
+
+    <h2>OLHOS</h2>
+    <ol>
+      <li class="item item-unchecked">Fluidline, Blacktrack [M.A.C.]
+      </li>
+      <li class="item item-unchecked">Fluidline, Dipdown [M.A.C.]
+      </li>
+      <li class="item item-checked">Liquid Eyeliner, Make B. [O Boticário]
+      </li>
+      <li class="item item-checked">Primer,Smudge Proof Eyeshadow Base [NARS]
+      </li>
+      <li class="item item-checked">Primer Potion [Urban Decay] - tenho mais de 1 na versão travel size
+      </li>
+      <li class="item item-checked">Primer para olhos [O Boticário]
+      </li>
+      <li class="item item-unchecked">Color Tattoo, Bad to the Bronze [Maybelline]
+      </li>
+      <li class="item item-checked">Color Tattoo, Audacious Asphalt [Maybelline]
+      </li>
+      <li class="item item-unchecked">Paint Pot, Painterly [M.A.C.]
+      </li>
+      <li class="item item-unchecked">Paint Pot, Bare Study [M.A.C.]
+      </li>
+      <li class="item item-unchecked">Eyeshadow, Secret Service [Urban Decay]
+      </li>
+      <li class="item item-checked">Eyeshadow, Hazelnut [Mary Kay]
+      </li>
+      <li class="item item-unchecked">Eyeshadow, Navy blue [Mary Kay]
+      </li>
+      <li class="item item-checked">Eyeshadow, Granit [Mary Kay]
+      </li>
+      <li class="item item-unchecked">Eye Bright [Benefit]
+      </li>
+      <li class="item item-unchecked">Lápis Borracha [O Boticário]
+      </li>
+      <li class="item item-unchecked">Jumbo, Black Bean [NYX]
+      </li>
+      <li class="item item-checked">Jumbo, Orange [NYX]
+      </li>
+      <li class="item item-checked">Jumbo, Lime [NYX]
+      </li>
+      <li class="item item-checked">Jumbo, Slate [NYX]
+      </li>
+      <li class="item item-checked">Jumbo, Yogurt [NYX]
+      </li>
+      <li class="item item-checked">Jumbo, Dark Brown [NYX]
+      </li>
+      <li class="item item-checked">Jumbo, Rocky Mountain Green [NYX]
+      </li>
+      <li class="item item-unchecked">Jumbo, Purple [NYX]
+      </li>
+      <li class="item item-unchecked">Jumbo, Milk [NYX]
+      </li>
+      <li class="item item-checked">Jumbo, Yellow [NYX]
+      </li>
+      <li class="item item-checked">Curvex [Contém 1g]
+      </li>
+      <li class="item item-unchecked">Mascara Helper
+      </li>
+      <li class="item item-checked">Apontador duplo [M.A.C.]
+      </li>
+      <li class="item item-checked">Eyeliner, Blue [Contém 1g]
+      </li>
+      <li class="item item-unchecked">Eyeliner, Aqua [Milani]
+      </li>
+      <li class="item item-checked">Eyeliner, Bege [Duda Molinos]
+      </li>
+      <li class="item item-unchecked">Perfect Kajal Look, Black [P2]
+      </li>
+      <li class="item item-checked">Eyeliner, Fascinating [M.A.C.]
+      </li>
+      <li class="item item-checked">Eyeliner, Engraved [M.A.C.]
+      </li>
+      <li class="item item-checked">Eyeliner, Indigo [M.A.C.]
+      </li>
+      <li class="item item-checked">Eyeliner, Perversion [Urban Decay]
+      </li>
+      <li class="item item-checked">Eyeliner, Verdão [Quem disse, Berenice?]
+      </li>
+      <li class="item item-checked">Caneta delineadora preta [O Boticário]
+      </li>
+      <li class="item item-checked">Máscara para Cílios, Violeta [O Boticário]
+      </li>
+      <li class="item item-checked">Máscara para Cílios, Azul [O Boticário]
+      </li>
+      <li class="item item-unchecked">Máscara para Cílios, The Colossal [Maybelline]
+      </li>
+      <li class="item item-unchecked">Máscara para Cílios, The Colossal Cat Eyes [Maybelline]
+      </li>
+      <li class="item item-checked">Máscara para Cílios, They're Real Mini [Benefit] - tenho mais de 1
+      </li>
+      <li class="item item-unchecked">Máscara para Cílios, Bottom Lash [Clinique]
+      </li>
+      <li class="item item-unchecked">Gel fixador de sobrancelhas [Marina 2 Beauty]
+      </li>
+      <li class="item item-unchecked">Eyeshadow powder, pink [Contém 1g]
+      </li>
+      <li class="item item-unchecked">Eyeshadow powder, azul [Sem marca]
+      </li>
+    </ol>
+
+    <h2>BOCA</h2>
+    <ol>
+      <li class="item item-unchecked">Hug me [M.A.C.]
+      </li>
+      <li class="item item-checked">Vegas Volt [M.A.C.]
+      </li>
+      <li class="item item-checked">Viva Glam, Nicki Minaj [M.A.C.]
+      </li>
+      <li class="item item-unchecked">
+        Ronnie Red, The Archie's Girls [M.A.C.]
+      </li>
+      <li class="item item-checked">Betty Bright, The Archie's Girls [M.A.C.]
+      </li>
+      <li class="item item-checked">Brave [M.A.C.]
+      </li>
+      <li class="item item-unchecked">Rebel [M.A.C.]
+      </li>
+      <li class="item item-unchecked">Russian Red [M.A.C.]
+      </li>
+      <li class="item item-unchecked">Diva [M.A.C.]
+      </li>
+      <li class="item item-unchecked">Relentlessly Red [M.A.C.]
+      </li>
+      <li class="item item-checked">Viva Glam I [M.A.C.]
+      </li>
+      <li class="item item-unchecked">Kinda Sexy [M.A.C.]
+      </li>
+      <li class="item item-unchecked">Flat Out Fabulous [M.A.C.]
+      </li>
+      <li class="item item-unchecked">Lápis Riri Woo, Rihanna [M.A.C.]
+      </li>
+      <li class="item item-unchecked">Lasting Lust [M.A.C.]
+      </li>
+      <li class="item item-checked">Perennial Rose [M.A.C.]
+      </li>
+      <li class="item item-checked">Night Rose [M.A.C.]
+      </li>
+      <li class="item item-checked">Apontador duplo [M.A.C.]
+      </li>
+      <li class="item item-unchecked">Cruella [NARS]
+      </li>
+      <li class="item item-unchecked">Damned [NARS]
+      </li>
+      <li class="item item-unchecked">Dragon [NARS]
+      </li>
+      <li class="item item-unchecked">Dolce Vitta [NARS]
+      </li>
+      <li class="item item-checked">Cat Fight [NARS]
+      </li>
+      <li class="item item-unchecked">Apontador duplo [NARS]
+      </li>
+      <li class="item item-unchecked">Amsterdam, Soft Matte Lip Cream [NYX]
+      </li>
+      <li class="item item-unchecked">San Paulo, Soft Matte Lip Cream [NYX]
+      </li>
+      <li class="item item-unchecked">Antwerp, Soft Matte Lip Cream [NYX]
+      </li>
+      <li class="item item-checked">London, Soft Matte Lip Cream [NYX]
+      </li>
+      <li class="item item-checked">Coralice [Quem disse, Berenice?]
+      </li>
+      <li class="item item-checked">Vindito [Quem disse, Berenice?]
+      </li>
+      <li class="item item-unchecked">Bephantol Lipstick
+      </li>
+      <li class="item item-checked">Carmex
+      </li>
+      <li class="item item-unchecked">Nívea Med Protection FPS 15
+      </li>
+    </ol>
+
+    <h2>PALETAS</h2>
+    <ol>
+      <li class="item item-unchecked">Naked 1 [Urban Decay]
+      </li>
+      <li class="item item-unchecked">Naked 2 [Urban Decay]
+      </li>
+      <li class="item item-unchecked">Naked 3 [Urban Decay]
+      </li>
+      <li class="item item-unchecked">Naked Basics [Urban Decay]
+      </li>
+      <li class="item item-unchecked">Smoked [Urban Decay]
+      </li>
+      <li class="item item-unchecked">And God Created The Woman [NARS]
+      </li>
+      <li class="item item-unchecked">Free System,#355#327#391#363 [Inglot]
+      </li>
+      <li class="item item-checked">Riri Palette, Smoked Cocoa [M.A.C.] - 10/2016
+      </li>
+      <li class="item item-checked">Oh my God I want that [Catrice]
+      </li>
+      <li class="item item-checked">Blot Powder Pressed, Light [M.A.C.] - vazio para Back to M.A.C.
+      </li>
+    </ol>
+
+    <h2>PINCÉIS PARA OLHOS</h2>
+    <ol>
+      <li class="item item-checked">212SE [M.A.C.]
+      </li>
+      <li class="item item-checked">214 [M.A.C.]
+      </li>
+      <li class="item item-checked">219 [M.A.C.]
+      </li>
+      <li class="item item-checked">217 [M.A.C.]
+      </li>
+      <li class="item item-checked">217 [M.A.C.]
+      </li>
+      <li class="item item-checked">217SE [M.A.C.]
+      </li>
+      <li class="item item-checked">226SE [M.A.C.]
+      </li>
+      <li class="item item-checked">239SE [M.A.C.]
+      </li>
+      <li class="item item-checked">239 [M.A.C.]
+      </li>
+      <li class="item item-checked">239 [M.A.C.]
+      </li>
+      <li class="item item-checked">242SE [M.A.C.]
+      </li>
+      <li class="item item-checked">263 [M.A.C.]
+      </li>
+      <li class="item item-checked">266SE [M.A.C.]
+      </li>
+      <li class="item item-checked">275 [M.A.C.]
+      </li>
+      <li class="item item-checked">Naked 1 [Urban Decay]
+      </li>
+      <li class="item item-checked">Naked 2 [Urban Decay]
+      </li>
+      <li class="item item-checked">Naked 3 [Urban Decay]
+      </li>
+      <li class="item item-checked">Aplicar sombra [Nars]
+      </li>
+      <li class="item item-checked">E05 [Sigma]
+      </li>
+      <li class="item item-checked">E16 [Sigma]
+      </li>
+      <li class="item item-checked">E20+E45, Paleta Dare [Sigma]
+      </li>
+      <li class="item item-checked">E25 [Sigma]
+      </li>
+      <li class="item item-checked">E30 [Sigma]
+      </li>
+      <li class="item item-checked">E45 [Sigma]
+      </li>
+      <li class="item item-checked">E45 [Sigma]
+      </li>
+      <li class="item item-checked">E55 [Sigma]
+      </li>
+      <li class="item item-checked">E55 [Sigma, Paris]
+      </li>
+      <li class="item item-checked">F70 [Sigma]
+      </li>
+      <li class="item item-checked">Delineador [Contém 1g]
+      </li>
+      <li class="item item-checked">Delineador [Contém 1g]
+      </li>
+      <li class="item item-checked">Delineador - menor [Contém 1g]
+      </li>
+      <li class="item item-checked">Esfumar[Contém 1g]
+      </li>
+      <li class="item item-checked">Tipo lápis[Eco Tools]
+      </li>
+      <li class="item item-checked">Esfumar [Eudora]
+      </li>
+      <li class="item item-unchecked">Aplicador de máscara de cílios branco [Descartável]
+      </li>
+      <li class="item item-unchecked">Aplicador de máscara de cílios branco [Descartável]
+      </li>
+      <li class="item item-unchecked">Aplicador de máscara de cílios preto [Descartável]
+      </li>
+      <li class="item item-unchecked">Aplicador de máscara de cílios preto [Descartável]
+      </li>
+      <li class="item item-unchecked">Aplicador de máscara de cílios preto [Descartável]
+      </li>
+    </ol>
+
+    <h2>PINCÉIS PARA O ROSTO</h2>
+    <ol>
+      <li class="item item-checked">F80 [Sigma]
+      </li>
+      <li class="item item-checked">F84 [Sigma]
+      </li>
+      <li class="item item-checked">F88 [Sigma]
+      </li>
+      <li class="item item-checked">F30 [Sigma]
+      </li>
+      <li class="item item-checked">F40, Paris [Sigma]
+      </li>
+      <li class="item item-checked">F50 [Sigma]
+      </li>
+      <li class="item item-checked">Brush Cleanser [Quem disse, Berenice?]
+      </li>
+      <li class="item item-checked">167SE [M.A.C.]
+      </li>
+      <li class="item item-checked">167SE [M.A.C.]
+      </li>
+      <li class="item item-checked">168SE [M.A.C.]
+      </li>
+      <li class="item item-checked">168SE [M.A.C.]
+      </li>
+      <li class="item item-checked">P84 [Sigma]
+      </li>
+      <li class="item item-checked">235 [M.A.C.]
+      </li>
+      <li class="item item-checked">P88 [Sigma]
+      </li>
+      <li class="item item-checked">P86 [Sigma]
+      </li>
+      <li class="item item-checked">193 [M.A.C.]
+      </li>
+      <li class="item item-checked">287SE [M.A.C.]
+      </li>
+      <li class="item item-checked">130 [M.A.C.]
+      </li>
+      <li class="item item-checked">187 [M.A.C.]
+      </li>
+      <li class="item item-checked">E40 [Sigma]
+      </li>
+      <li class="item item-checked">109 [M.A.C.]
+      </li>
+      <li class="item item-checked">150 [M.A.C.]
+      </li>
+      <li class="item item-checked">129 [M.A.C.]
+      </li>
+      <li class="item item-checked">F60 [Sigma]
+      </li>
+      <li class="item item-checked">Optical Blurring [Urban Decay]
+      </li>
+    </ol>
+
+    <h2>OUTROS</h2>
+    <ol>
+      <li class="item item-checked">Espelho 5x com led
+      </li>
+      <li class="item item-unchecked">Espelho 10x [Tweezerman]
+      </li>
+      <li class="item item-checked">Curvex Acrílico [Tweezerman]
+      </li>
+      <li class="item item-unchecked">Brush Cleanser, spray 40ml - RESTRIÇÃO DE BAGAGEM
+      </li>
+      <li class="item item-checked">Esponjinhas queijinhos</li>
+    </ol>
+  </div>
+
+
+<script type="text/javascript">
+
+$(".item-toggler").click(function() {
+  toggleItems($(this).attr('href'));
+});
+
+$('#filter').keyup(function(){
+  var val = $(this).val();
+
+  if(val.length > 3)
+    filterItems(val);
+});
+
+function clearFilter() {
+  $('#filter').val('');
+  filterItems('');
+}
+
+function filterItems(filter) {
+  if(filter == '') {
+    $('.item').show();
+    return;
+  }
+
+  $('.item').each(function(i, el){
+    el = $(el);
+    if(el.text().toLowerCase().indexOf(filter) < 0) {
+      el.hide();
+    }
+    else {
+      el.show();
+    }
+  })
+}
+
+function toggleItems(hash) {
+
+  clearFilter();
+  $('nav li.active').removeClass('active');
+
+  switch(hash) {
+    case '#selling' :
+        $('.item-unchecked').hide();
+        $('.item-checked').show();
+        $('nav li.selling').addClass('active');
+        break;
+    case '#maybe' :
+        $('.item-unchecked').show();
+        $('.item-checked').hide();
+        $('nav li.maybe').addClass('active');
+        break;
+    default :
+        $('.item-unchecked').show();
+        $('.item-checked').show();
+        $('nav li.all').addClass('active');
+  }
+}
+
+toggleItems(window.location.hash);
+</script>
+</body>
+</html>
