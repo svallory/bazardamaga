@@ -5,27 +5,153 @@
     Bazar da Magá
   </title>
   <meta charset="utf-8">
-  <script type="text/javascript" src="//code.jquery.com/jquery-2.1.1.min.js"></script>
+  <script type="text/javascript" src="components/superagent/superagent.js"></script>
 
-  <!-- Latest compiled and minified CSS -->
-  <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+  <script type="text/javascript">
 
-  <!-- Optional theme -->
-  <!-- link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css" -->
-
-  <link rel="stylesheet" href="//bootswatch.com/lumen/bootstrap.min.css" />
-
-  <!-- Latest compiled and minified JavaScript -->
-  <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
-
-  <style>
-    body {
-      padding-top: 100px;
+    var resources = {
+      jquery: { 
+        type: 'js', 
+        local: 'components/jquery/dist/jquery.min.js', 
+        cdn: "//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js", 
+        isLoaded: function (argument) { return !!window.jQuery}
+      },
+      twbs_js: { 
+        type: 'js', 
+        local: 'components/bootstrap/dist/js/bootstrap.min.js', 
+        cdn: '//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js',
+        isLoaded: function() { return (window.jQuery && !!window.jQuery.fn.popover); }
+      },
+      twbs_css: { 
+        type: 'css', 
+        local: 'components/bootstrap/dist/css/bootstrap.min.css', 
+        cdn: '//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css'
+      },
+      twbs_lumen: { 
+        type: 'css', 
+        local: 'components/bootswatch/lumen/bootstrap.min.css', 
+        cdn: '//maxcdn.bootstrapcdn.com/bootswatch/3.2.0/lumen/bootstrap.min.css'
+      },
+      magnify : {
+        type: 'js',
+        local: 'plugins/magnify/js/bootstrap-magnify.min.js'
+      },
+      masonry : {
+        type: 'js',
+        local: 'components/masonry/dist/masonry.pkgd.js'
+      },
+      isotope : {
+        type: 'js',
+        local: 'components/isotope/dist/isotope.pkgd.js'
+      },
+      scripts : {
+        type: 'js',
+        local: 'scripts.js?123'
+      }
     }
-    ol {
-      list-style: none;
+
+    function getResource(resId) {
+
+      var res = resources[resId];
+
+      if(!res)
+        throw new Error("The resource " + resId + " is not registered");
+
+      return res;
     }
-  </style>
+
+    function _appendResource(resId, text) {
+        var res = getResource(resId);
+        var elem;
+
+        if(res.type == 'js') {
+          elem = document.createElement('script');
+          elem.type = "text/javascript";
+        }
+        if(res.type == 'css') {
+          elem = document.createElement('style');
+          elem.type = 'text/css';
+          elem.media = res.media || "screen";
+          elem.scoped = res.scoped || null;
+        }
+        
+        elem.id = resId;
+        elem.textContent = text;
+        console.log("  Appending ", elem);
+        document.getElementsByTagName('head')[0].appendChild(elem);
+    }
+
+    function _loadResource(resId, local, then) {
+      var res = getResource(resId);
+      var url = local ? res.local : res.cdn;
+      console.log("  Loading " + (local ? "local " : "remote ") + resId + " at " + url)
+
+      superagent.get(url, function(error, resp) {
+        if(error) {
+          throw error;
+        }
+
+        if(resp.ok) {
+          //if(url.indexOf('css')) console.log(resp.text)
+          _appendResource(resId, resp.text);
+          if(then) then();
+        }
+        else if(!local) {
+          _loadResource(resId, true, then)
+        }
+      })
+    }
+
+    function autocdn(resId, then) {
+      var res = getResource(resId);
+      console.log("autocdn("+resId+")")
+      if(window.location.host == 'localhost' || !res.cdn)
+        _loadResource(resId, true, then);
+      else {
+        _loadResource(resId, false, then);
+      }
+    }
+
+    function fallbackAll() {
+      for(var id in resources) if(resources.hasOwnProperty(id)) {
+        fallback(id);
+      }
+    }
+
+    function fallback(resId) {
+      var res = getResource(resId);
+      console.log("Falling back to local for " + resId)
+      if(res.type == 'js' && !res.isLoaded())
+        _loadResource(resId, 'local')
+      else if(res.type == 'css' && !checkStyleWasLoaded(resId))
+        _loadResource(resId, 'local');
+    }
+
+    function checkStyleWasLoaded(resId) {
+      var sheet = document.getElementById(resId);
+      var rules = sheet.rules ? sheet.rules : sheet.cssRules;
+
+      return rules.length > 0;
+    }
+  </script>
+
+  <!-- TODO: ADD SCRIPTS USING load() -->
+  <script type="text/javascript">
+    autocdn('jquery', function() { 
+      console.log("jQuery? " + (!!window.jQuery ? "YES" : "NO"))
+      autocdn('twbs_js')
+      autocdn('magnify')
+      autocdn('isotope', function() {
+        autocdn('scripts')
+      })
+    });
+    
+    //autocdn('twbs_js');
+    autocdn('twbs_lumen');
+  </script>
+  <!-- custom -->
+  <link rel="stylesheet" href="plugins/magnify/css/bootstrap-magnify.min.css">
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -59,488 +185,2595 @@
   </nav>
   <div class="container">
     <h2>FACE</h2>
-    <ol>
-      <li class="item item-unchecked">Mineral Veil Primer [Hourglass]
+    <ol class="row">
+      <li id="item-sizer" class="col-sm-6 col-md-4 col-lg-3"></li>
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/mineral_veil_primer_hourglass_1.jpg" />
+          <div class="caption">
+            <h3 class="item-desc">
+              <span class="item-name">Veil</span> 
+              <span class="item-type">Mineral Primer</span>
+              <span class="item-brand">[Hourglass]</span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Primer Porefessional [Benefit]
+
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Primer Porefessional [Benefit]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">FoundationPrimer [Laura Mercier]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              FoundationPrimer [Laura Mercier]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Teint Miracle, cor 010 [Lancôme]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Teint Miracle, cor 010 [Lancôme]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Vitalumière Aqua, 10 beige-pastel [CHANEL]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Vitalumière Aqua, 10 beige-pastel [CHANEL]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Skin Foundation, beige 3 [Bobbi Brown]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Skin Foundation, beige 3 [Bobbi Brown]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Hello Flawless, Champagne [Benefit]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Hello Flawless, Champagne [Benefit]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Face and Body Foundation, N1 [M.A.C.]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Face and Body Foundation, N1 [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Oil-Control Makeup Setting Spray, De Slick [Urban Decay]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Oil-Control Makeup Setting Spray, De Slick [Urban Decay]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Colorstay Whipped, 200 sand beige [Revlon]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Colorstay Whipped, 200 sand beige [Revlon]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Powder, Prep+Prime [M.A.C.]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Powder, Prep+Prime [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">BB Cream, Clara [L'Oreal]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              BB Cream, Clara [L'Oreal]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Pure Make Up Foundation, 20 Beige Claro [Maybelline]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Pure Make Up Foundation, 20 Beige Claro [Maybelline]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Duo Base, Bege Claro [O Boticário]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Duo Base, Bege Claro [O Boticário]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Studio Fix Powder, N5 [M.A.C.]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Studio Fix Powder, N5 [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Studio Fix Powder, NC15 [M.A.C.]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Studio Fix Powder, NC15 [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Blot Powder Pressed, Medium [M.A.C.]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Blot Powder Pressed, Medium [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Concealer, 01 [Laura Mercier]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Concealer, 01 [Laura Mercier]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Concealer Dermacolor, D4 [Kryolan]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Concealer Dermacolor, D4 [Kryolan]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Concealer Dermacolor, D52 [Kryolan]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Concealer Dermacolor, D52 [Kryolan]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Corrector, Light to medium bisque [Bobbi Brown]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Corrector, Light to medium bisque [Bobbi Brown]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Concealer + Powder Set, Warm beige/Pale yellow [Bobbi Brown]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Concealer + Powder Set, Warm beige/Pale yellow [Bobbi Brown]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Concealer Studio Finish, NW20 [M.A.C.]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Concealer Studio Finish, NW20 [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Concealer Studio Sculpt, NW20 [M.A.C.]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Concealer Studio Sculpt, NW20 [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Concealer Pro Longwear, NW20 [M.A.C.]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Concealer Pro Longwear, NW20 [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Concealer Mineraiize, NW20 [M.A.C.]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Concealer Mineraiize, NW20 [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Concealer Duo Boing 01 and 02 [Benefit]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Concealer Duo Boing 01 and 02 [Benefit]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Concealer Duo Boing 02 and Lemonaid [Benefit]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Concealer Duo Boing 02 and Lemonaid [Benefit]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Concealer Instant Age Rewind Dark Spots Treatment, Fair :/, era pra ser fair/light [Maybelline]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Concealer Instant Age Rewind Dark Spots Treatment, Fair :/, era pra ser fair/light [Maybelline]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Orgasm [NARS]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Orgasm [NARS]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Bella Bamba [Benefit]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Bella Bamba [Benefit]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Highlighter What's up? [Benefit]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Highlighter What's up? [Benefit]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Bronzer, Hoola [Benefit]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Bronzer, Hoola [Benefit]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">O-glow Intuitive Cheek Color [Smashbox]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              O-glow Intuitive Cheek Color [Smashbox]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Cream Blush, Posay [M.A.C.]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Cream Blush, Posay [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Powder Blush Marilyn Monroe, Perfect Cheek [M.A.C.]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Powder Blush Marilyn Monroe, Perfect Cheek [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Powder Blush, Taupe [NYX]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Powder Blush, Taupe [NYX]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
     </ol>
 
     <h2>OLHOS</h2>
-    <ol>
-      <li class="item item-unchecked">Fluidline, Blacktrack [M.A.C.]
+    <ol class="row">
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Fluidline, Blacktrack [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Fluidline, Dipdown [M.A.C.]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Fluidline, Dipdown [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Liquid Eyeliner, Make B. [O Boticário]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Liquid Eyeliner, Make B. [O Boticário]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Primer,Smudge Proof Eyeshadow Base [NARS]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Primer,Smudge Proof Eyeshadow Base [NARS]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Primer Potion [Urban Decay] - tenho mais de 1 na versão travel size
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Primer Potion [Urban Decay] - tenho mais de 1 na versão travel size
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Primer para olhos [O Boticário]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Primer para olhos [O Boticário]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Color Tattoo, Bad to the Bronze [Maybelline]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Color Tattoo, Bad to the Bronze [Maybelline]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Color Tattoo, Audacious Asphalt [Maybelline]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Color Tattoo, Audacious Asphalt [Maybelline]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Paint Pot, Painterly [M.A.C.]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Paint Pot, Painterly [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Paint Pot, Bare Study [M.A.C.]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Paint Pot, Bare Study [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Eyeshadow, Secret Service [Urban Decay]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Eyeshadow, Secret Service [Urban Decay]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Eyeshadow, Hazelnut [Mary Kay]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Eyeshadow, Hazelnut [Mary Kay]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Eyeshadow, Navy blue [Mary Kay]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Eyeshadow, Navy blue [Mary Kay]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Eyeshadow, Granit [Mary Kay]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Eyeshadow, Granit [Mary Kay]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Eye Bright [Benefit]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Eye Bright [Benefit]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Lápis Borracha [O Boticário]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Lápis Borracha [O Boticário]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Jumbo, Black Bean [NYX]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Jumbo, Black Bean [NYX]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Jumbo, Orange [NYX]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Jumbo, Orange [NYX]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Jumbo, Lime [NYX]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Jumbo, Lime [NYX]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Jumbo, Slate [NYX]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Jumbo, Slate [NYX]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Jumbo, Yogurt [NYX]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Jumbo, Yogurt [NYX]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Jumbo, Dark Brown [NYX]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Jumbo, Dark Brown [NYX]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Jumbo, Rocky Mountain Green [NYX]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Jumbo, Rocky Mountain Green [NYX]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Jumbo, Purple [NYX]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Jumbo, Purple [NYX]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Jumbo, Milk [NYX]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Jumbo, Milk [NYX]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Jumbo, Yellow [NYX]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Jumbo, Yellow [NYX]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Curvex [Contém 1g]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Curvex [Contém 1g]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Mascara Helper
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Mascara Helper
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Apontador duplo [M.A.C.]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Apontador duplo [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Eyeliner, Blue [Contém 1g]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Eyeliner, Blue [Contém 1g]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Eyeliner, Aqua [Milani]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Eyeliner, Aqua [Milani]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Eyeliner, Bege [Duda Molinos]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Eyeliner, Bege [Duda Molinos]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Perfect Kajal Look, Black [P2]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Perfect Kajal Look, Black [P2]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Eyeliner, Fascinating [M.A.C.]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Eyeliner, Fascinating [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Eyeliner, Engraved [M.A.C.]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Eyeliner, Engraved [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Eyeliner, Indigo [M.A.C.]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Eyeliner, Indigo [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Eyeliner, Perversion [Urban Decay]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Eyeliner, Perversion [Urban Decay]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Eyeliner, Verdão [Quem disse, Berenice?]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Eyeliner, Verdão [Quem disse, Berenice?]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Caneta delineadora preta [O Boticário]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Caneta delineadora preta [O Boticário]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Máscara para Cílios, Violeta [O Boticário]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Máscara para Cílios, Violeta [O Boticário]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Máscara para Cílios, Azul [O Boticário]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Máscara para Cílios, Azul [O Boticário]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Máscara para Cílios, The Colossal [Maybelline]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Máscara para Cílios, The Colossal [Maybelline]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Máscara para Cílios, The Colossal Cat Eyes [Maybelline]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Máscara para Cílios, The Colossal Cat Eyes [Maybelline]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Máscara para Cílios, They're Real Mini [Benefit] - tenho mais de 1
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Máscara para Cílios, They're Real Mini [Benefit] - tenho mais de 1
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Máscara para Cílios, Bottom Lash [Clinique]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Máscara para Cílios, Bottom Lash [Clinique]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Gel fixador de sobrancelhas [Marina 2 Beauty]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Gel fixador de sobrancelhas [Marina 2 Beauty]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Eyeshadow powder, pink [Contém 1g]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Eyeshadow powder, pink [Contém 1g]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Eyeshadow powder, azul [Sem marca]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Eyeshadow powder, azul [Sem marca]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
     </ol>
 
     <h2>BOCA</h2>
-    <ol>
-      <li class="item item-unchecked">Hug me [M.A.C.]
+    <ol class="row">
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Hug me [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Vegas Volt [M.A.C.]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Vegas Volt [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Viva Glam, Nicki Minaj [M.A.C.]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Viva Glam, Nicki Minaj [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
       <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
         Ronnie Red, The Archie's Girls [M.A.C.]
       </li>
-      <li class="item item-checked">Betty Bright, The Archie's Girls [M.A.C.]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Betty Bright, The Archie's Girls [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Brave [M.A.C.]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Brave [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Rebel [M.A.C.]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Rebel [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Russian Red [M.A.C.]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Russian Red [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Diva [M.A.C.]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Diva [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Relentlessly Red [M.A.C.]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Relentlessly Red [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Viva Glam I [M.A.C.]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Viva Glam I [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Kinda Sexy [M.A.C.]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Kinda Sexy [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Flat Out Fabulous [M.A.C.]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Flat Out Fabulous [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Lápis Riri Woo, Rihanna [M.A.C.]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Lápis Riri Woo, Rihanna [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Lasting Lust [M.A.C.]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Lasting Lust [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Perennial Rose [M.A.C.]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Perennial Rose [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Night Rose [M.A.C.]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Night Rose [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Apontador duplo [M.A.C.]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Apontador duplo [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Cruella [NARS]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Cruella [NARS]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Damned [NARS]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Damned [NARS]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Dragon [NARS]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Dragon [NARS]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Dolce Vitta [NARS]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Dolce Vitta [NARS]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Cat Fight [NARS]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Cat Fight [NARS]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Apontador duplo [NARS]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Apontador duplo [NARS]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Amsterdam, Soft Matte Lip Cream [NYX]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Amsterdam, Soft Matte Lip Cream [NYX]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">San Paulo, Soft Matte Lip Cream [NYX]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              San Paulo, Soft Matte Lip Cream [NYX]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Antwerp, Soft Matte Lip Cream [NYX]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Antwerp, Soft Matte Lip Cream [NYX]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">London, Soft Matte Lip Cream [NYX]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              London, Soft Matte Lip Cream [NYX]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Coralice [Quem disse, Berenice?]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Coralice [Quem disse, Berenice?]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Vindito [Quem disse, Berenice?]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Vindito [Quem disse, Berenice?]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Bephantol Lipstick
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Bephantol Lipstick
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Carmex
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Carmex
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Nívea Med Protection FPS 15
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Nívea Med Protection FPS 15
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
     </ol>
 
     <h2>PALETAS</h2>
-    <ol>
-      <li class="item item-unchecked">Naked 1 [Urban Decay]
+    <ol class="row">
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Naked 1 [Urban Decay]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Naked 2 [Urban Decay]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Naked 2 [Urban Decay]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Naked 3 [Urban Decay]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Naked 3 [Urban Decay]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Naked Basics [Urban Decay]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Naked Basics [Urban Decay]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Smoked [Urban Decay]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Smoked [Urban Decay]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">And God Created The Woman [NARS]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              And God Created The Woman [NARS]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Free System,#355#327#391#363 [Inglot]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Free System,#355#327#391#363 [Inglot]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Riri Palette, Smoked Cocoa [M.A.C.] - 10/2016
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Riri Palette, Smoked Cocoa [M.A.C.] - 10/2016
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Oh my God I want that [Catrice]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Oh my God I want that [Catrice]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Blot Powder Pressed, Light [M.A.C.] - vazio para Back to M.A.C.
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Blot Powder Pressed, Light [M.A.C.] - vazio para Back to M.A.C.
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
     </ol>
 
     <h2>PINCÉIS PARA OLHOS</h2>
-    <ol>
-      <li class="item item-checked">212SE [M.A.C.]
+    <ol class="row">
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              212SE [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">214 [M.A.C.]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              214 [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">219 [M.A.C.]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              219 [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">217 [M.A.C.]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              217 [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">217 [M.A.C.]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              217 [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">217SE [M.A.C.]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              217SE [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">226SE [M.A.C.]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              226SE [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">239SE [M.A.C.]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              239SE [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">239 [M.A.C.]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              239 [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">239 [M.A.C.]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              239 [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">242SE [M.A.C.]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              242SE [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">263 [M.A.C.]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              263 [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">266SE [M.A.C.]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              266SE [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">275 [M.A.C.]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              275 [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Naked 1 [Urban Decay]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Naked 1 [Urban Decay]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Naked 2 [Urban Decay]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Naked 2 [Urban Decay]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Naked 3 [Urban Decay]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Naked 3 [Urban Decay]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Aplicar sombra [Nars]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Aplicar sombra [Nars]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">E05 [Sigma]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              E05 [Sigma]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">E16 [Sigma]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              E16 [Sigma]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">E20+E45, Paleta Dare [Sigma]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              E20+E45, Paleta Dare [Sigma]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">E25 [Sigma]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              E25 [Sigma]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">E30 [Sigma]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              E30 [Sigma]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">E45 [Sigma]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              E45 [Sigma]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">E45 [Sigma]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              E45 [Sigma]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">E55 [Sigma]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              E55 [Sigma]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">E55 [Sigma, Paris]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              E55 [Sigma, Paris]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">F70 [Sigma]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              F70 [Sigma]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Delineador [Contém 1g]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Delineador [Contém 1g]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Delineador [Contém 1g]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Delineador [Contém 1g]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Delineador - menor [Contém 1g]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Delineador - menor [Contém 1g]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Esfumar[Contém 1g]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Esfumar[Contém 1g]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Tipo lápis[Eco Tools]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Tipo lápis[Eco Tools]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Esfumar [Eudora]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Esfumar [Eudora]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Aplicador de máscara de cílios branco [Descartável]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Aplicador de máscara de cílios branco [Descartável]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Aplicador de máscara de cílios branco [Descartável]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Aplicador de máscara de cílios branco [Descartável]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Aplicador de máscara de cílios preto [Descartável]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Aplicador de máscara de cílios preto [Descartável]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Aplicador de máscara de cílios preto [Descartável]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Aplicador de máscara de cílios preto [Descartável]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Aplicador de máscara de cílios preto [Descartável]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Aplicador de máscara de cílios preto [Descartável]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
     </ol>
 
     <h2>PINCÉIS PARA O ROSTO</h2>
-    <ol>
-      <li class="item item-checked">F80 [Sigma]
+    <ol class="row">
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              F80 [Sigma]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">F84 [Sigma]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              F84 [Sigma]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">F88 [Sigma]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              F88 [Sigma]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">F30 [Sigma]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              F30 [Sigma]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">F40, Paris [Sigma]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              F40, Paris [Sigma]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">F50 [Sigma]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              F50 [Sigma]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Brush Cleanser [Quem disse, Berenice?]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Brush Cleanser [Quem disse, Berenice?]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">167SE [M.A.C.]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              167SE [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">167SE [M.A.C.]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              167SE [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">168SE [M.A.C.]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              168SE [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">168SE [M.A.C.]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              168SE [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">P84 [Sigma]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              P84 [Sigma]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">235 [M.A.C.]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              235 [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">P88 [Sigma]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              P88 [Sigma]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">P86 [Sigma]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              P86 [Sigma]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">193 [M.A.C.]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              193 [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">287SE [M.A.C.]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              287SE [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">130 [M.A.C.]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              130 [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">187 [M.A.C.]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              187 [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">E40 [Sigma]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              E40 [Sigma]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">109 [M.A.C.]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              109 [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">150 [M.A.C.]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              150 [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">129 [M.A.C.]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              129 [M.A.C.]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">F60 [Sigma]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              F60 [Sigma]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Optical Blurring [Urban Decay]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Optical Blurring [Urban Decay]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
     </ol>
 
     <h2>OUTROS</h2>
-    <ol>
-      <li class="item item-checked">Espelho 5x com led
+    <ol class="row">
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Espelho 5x com led
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Espelho 10x [Tweezerman]
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Espelho 10x [Tweezerman]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Curvex Acrílico [Tweezerman]
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Curvex Acrílico [Tweezerman]
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-unchecked">Brush Cleanser, spray 40ml - RESTRIÇÃO DE BAGAGEM
+      <li class="item item-unchecked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Brush Cleanser, spray 40ml - RESTRIÇÃO DE BAGAGEM
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
       </li>
-      <li class="item item-checked">Esponjinhas queijinhos</li>
+      <li class="item item-checked">
+        <div class="thumbnail">
+          <img data-toggle="magnify"src="img/no-img.gif" />
+          <div class="caption">
+            <h3 class="item-desc">
+              Esponjinhas queijinhos
+              <span class="item-name"></span> 
+              <span class="item-type"></span>
+              <span class="item-brand"></span>
+            </h3>
+          </div>
+        </div>
+      </li>
     </ol>
   </div>
-
-
-<script type="text/javascript">
-
-$(".item-toggler").click(function() {
-  toggleItems($(this).attr('href'));
-});
-
-$('#filter').keyup(function(){
-  var val = $(this).val();
-
-  if(val.length > 3)
-    filterItems(val);
-});
-
-function clearFilter() {
-  $('#filter').val('');
-  filterItems('');
-}
-
-function filterItems(filter) {
-  if(filter == '') {
-    $('.item').show();
-    return;
-  }
-
-  $('.item').each(function(i, el){
-    el = $(el);
-    if(el.text().toLowerCase().indexOf(filter) < 0) {
-      el.hide();
-    }
-    else {
-      el.show();
-    }
-  })
-}
-
-function toggleItems(hash) {
-
-  clearFilter();
-  $('nav li.active').removeClass('active');
-
-  switch(hash) {
-    case '#selling' :
-        $('.item-unchecked').hide();
-        $('.item-checked').show();
-        $('nav li.selling').addClass('active');
-        break;
-    case '#maybe' :
-        $('.item-unchecked').show();
-        $('.item-checked').hide();
-        $('nav li.maybe').addClass('active');
-        break;
-    default :
-        $('.item-unchecked').show();
-        $('.item-checked').show();
-        $('nav li.all').addClass('active');
-  }
-}
-
-toggleItems(window.location.hash);
-</script>
 </body>
 </html>
