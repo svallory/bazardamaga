@@ -1,0 +1,3 @@
+[submodule "plugins/magnify"]
+	path = plugins/magnify
+	url = https://github.com/marcaube/bootstrap-magnify.git
